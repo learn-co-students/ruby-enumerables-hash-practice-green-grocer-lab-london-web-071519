@@ -18,37 +18,28 @@ end
 
 def apply_coupons(cart, coupons)
   # code here
-
-  # result = {}
-  # # code here#
-  # cart.each do |food, info|
-  #   coupons.each do |coupon|
-  #     if food == coupon[:item] && info[:count] >= coupon[:num]
-  #       info[:count] =  info[:count] - coupon[:num]
-  #       if result["#{food} W/COUPON"]
-  #         result["#{food} W/COUPON"][:count] += 1
-  #       else
-  #         result["#{food} W/COUPON"] = {:price => coupon[:cost], :clearance => info[:clearance], :count => 1}
-  #       end
-  #     end
-  #   end
-  #   result[food] = info
-  # end
-  # result
-
 cart_with_coupons = {}
 
-cart.each do |food, info|
-  coupons.each do |coupon|
-    if food == coupon[:item] && info[:count] >= coupon[:num]
-      item_count = info[:count] = info[:count] - coupon[:num]
-      cart_with_coupons[food] = info
-      cart_with_coupons[food + " W/COUPON"] = {:price => (coupon[:cost] / coupon[:num]) , :clearance => true, :count => item_count}
-    else
+  if coupons.length == 0
+    return cart
+  else
+    cart.each do |food, info|
+      coupons.each do |coupon|
+        # binding.pry
+        if food == coupon[:item] && info[:count] >= coupon[:num]
+          info[:count] = info[:count] - coupon[:num]
+          if cart_with_coupons[food + " W/COUPON"]
+            cart_with_coupons[food + " W/COUPON"][:count] += coupon[:num]
+          else
+            cart_with_coupons[food + " W/COUPON"] = {:price => (coupon[:cost] / coupon[:num]) , :clearance => info[:clearance], :count => coupon[:num]}
+          end
+        else
+          cart_with_coupons[food] = info
+        end
+      end
       cart_with_coupons[food] = info
     end
   end
-end
 cart_with_coupons
 end
 
@@ -69,8 +60,11 @@ end
 def checkout(cart, coupons)
   # code here
   cart_total = 0
+  consolidated_cart = consolidate_cart(cart)
+  cart_with_coupons_applied = apply_coupons(consolidated_cart, coupons)
+  cart_with_coupons_clearance_applied = apply_clearance(cart_with_coupons_applied)
 
-  consolidate_cart(cart).each do |food, info|
+  cart_with_coupons_clearance_applied.each do |food, info|
     cart_total += info[:price]
   end
   cart_total
